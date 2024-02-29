@@ -47,6 +47,12 @@ try {
   sshagent(['49ed8f25-df06-498b-a010-5d98f54360f0']) {
     sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@65.2.121.116:/opt/apache-tomcat-9.0.86/webapps"
   }    
-  }
+  } catch(e) {
+    CurrentBuild.result="FAILED"
+      throw e
+}
+}
+finally{
+sendslackNotification(CurrentBuild.result)
 }
 }
