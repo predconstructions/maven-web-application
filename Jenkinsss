@@ -1,0 +1,23 @@
+node {
+def mavenHome = tool name: "maven3.9.6"
+def mavenCmd = "${mavenHome}/bin/mvn"
+properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
+stage ('checkoutcode')
+{
+    git branch: 'development', credentialsId: '0913d18f-e377-4ec0-9f08-2c00fc16b45d', url: 'https://github.com/predconstructions/maven-web-application.git'
+}
+stage ('build Package')
+{
+    sh "${mavenCmd} clean package"
+}
+stage ('upload artifacts into nexus')
+{
+    sh "${mavenCmd} deploy"
+}
+stage ('deploy into tomcat server')
+{
+sshagent(['49ed8f25-df06-498b-a010-5d98f54360f0']) {
+    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@65.2.121.116:/opt/apache-tomcat-9.0.86/webapps"
+}    
+}
+}
